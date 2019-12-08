@@ -1,0 +1,9 @@
+executable = /usr/bin/python3
+arguments = /home/sorawit/causalBandit/gene_data_exp.py $(Process)
+error = real1.err
+output = real1.out
+log = real1.log
+request_memory = 16384
+request_cpus = 8
+request_gpus = 0
+queue 4
