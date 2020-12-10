@@ -2,7 +2,7 @@ import itertools
 import sys
 from tqdm import tqdm
 
-from model import *
+from models import *
 import pickle
 
 from utils import get_gen_data, sample_corr_matrix, create_F, sample_coefs

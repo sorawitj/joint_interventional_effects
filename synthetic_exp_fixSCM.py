@@ -3,7 +3,7 @@ import sys
 
 from tqdm import tqdm
 
-from model import *
+from models import *
 import pickle
 
 from utils import get_gen_data, create_F
@@ -18,10 +18,11 @@ if __name__ == "__main__":
 
     seed = 2
     np.random.seed(seed)
-    interaction = None
+    interaction = True
     intercept = False
 
     sample_size = [100, 400, 1600, 6400, 25600]
+    # sample_size = [1600]
     if process == -1:
         pass
     else:
@@ -41,12 +42,6 @@ if __name__ == "__main__":
             np.array([0, 0.5, -1, 1]),
             np.array([0, 1.5, 1, -0.5, 0.5, -1, -1.5])
         ]
-        # coefs = [
-        #     np.array([1.]),
-        #     np.array([-1., 1.5]),
-        #     np.array([0.5, 0.5, -1.5, 0.75]),
-        #     np.array([1, 1.5, 1, -1.5, 0.75, -0.5, -0.75])
-        # ]
     else:
         coefs = [
             np.array([0.]),
@@ -65,13 +60,12 @@ if __name__ == "__main__":
 
     model = JointInterventionModel('exp', g, interaction=interaction, intercept=intercept)
     reg_model = RegressionModel(g, interaction=interaction, intercept=intercept)
+    reg_model_ind = RegressionModel(g, interaction=interaction, intercept=intercept)
     for n_sample in sample_size:
         f_res = {'m1': [], 'm2': [], 'm3': [], 'y': []}
         obs_cov_res = {'obs': [], 'int0': [], 'int1': [], 'int2': []}
         int_cov_res = {'m1': [], 'm2': [], 'm3': []}
-        pred_y, pred_reg, reg_coefs, ex_y = [], [], [], []
-
-        test_point = torch.tensor([1., 1., 1.])
+        pred_y, pred_reg, reg_coefs, ex_y, reg_coefs_ind = [], [], [], [], []
 
         for idx in tqdm(range(n_rounds)):
 
@@ -79,7 +73,6 @@ if __name__ == "__main__":
 
             obs_mean = obs_data.mean(0)[:3]
             obs_var = obs_data.var(0)[:3]  # check if we should std or var
-            ex_y += [F(n_dim - 1, test_point.numpy().reshape(1, -1)).item()]
 
             xs = np.random.multivariate_normal(obs_mean.numpy(), obs_var.numpy() * np.eye(3), size=n_sample)
 
@@ -95,12 +88,6 @@ if __name__ == "__main__":
 
             for f, k in zip(model.F, f_res.keys()):
                 f_res[k] += [f.squeeze().detach().numpy().copy()]
-            for cov, k in zip(model.int_covs.values(), int_cov_res.keys()):
-                int_cov_res[k] += [cov.squeeze().detach().numpy().copy()]
-
-            obs_cov_res['obs'] += [model.obs_cov.squeeze().detach().numpy().copy()]
-
-            pred_y += [model.pred_c(model.nodes[-1], test_point.reshape(1, -1)).squeeze().detach().numpy()]
 
             # clear param stores
             model.reset_params()
@@ -108,14 +95,11 @@ if __name__ == "__main__":
             pool_data = torch.cat(list(int_data.values()) + [obs_data])
             reg_model.train(pool_data)
 
-            pred_reg += [reg_model.pred(test_point.reshape(1, -1)).squeeze().detach().numpy()]
             reg_coefs += [np.concatenate([np.array([reg_model.model.intercept_]), reg_model.model.coef_])]
 
         for k in f_res.keys():
             f_res[k] = np.stack(f_res[k])
-        for k in int_cov_res.keys():
-            int_cov_res[k] = np.stack(int_cov_res[k])
-        obs_cov_res['obs'] = np.stack(obs_cov_res['obs'])
+
         pred_y = np.stack(pred_y).squeeze()
         ex_y = np.stack(ex_y).squeeze()
         pred_reg = np.stack(pred_reg).squeeze()
@@ -128,6 +112,7 @@ if __name__ == "__main__":
             reg_coefs = reg_coefs[:, 1:]
 
         # save the results
-        with open("_synthetic_results/cons2_inter{}_s{}_n{}.pickle".format(interaction, seed, n_sample), 'wb') as handle:
+        with open("_synthetic_results/reg_regime_inter{}_s{}_n{}.pickle".format(interaction, seed, n_sample),
+                  'wb') as handle:
             pickle.dump([ex_y, pred_y, pred_reg, f_res, reg_coefs, save_ceof], handle,
                         protocol=pickle.HIGHEST_PROTOCOL)

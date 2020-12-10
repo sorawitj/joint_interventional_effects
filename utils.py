@@ -3,8 +3,6 @@ import itertools
 import torch
 import numpy as np
 from mpmath import factorial
-from scipy.stats.mstats_basic import winsorize
-
 
 class EarlyStopping:
     """Early stops the training if loss doesn't improve after a given patience."""
@@ -125,8 +123,3 @@ def sample_coefs(k, sigma, interaction=False, intercept=False):
         for coef in coefs:
             coef[0] = 0
     return coefs
-
-
-def winsorized_mean(data, percentile=0.1):
-    mean = np.mean(winsorize(data, (0, percentile)).data)
-    return mean

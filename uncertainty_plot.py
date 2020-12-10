@@ -37,10 +37,10 @@ for n in sample_size:
     df_n['Sample Size'] = n
     df_pred = pd.concat([df_pred, df_n], ignore_index=True)
 
-g = sns.FacetGrid(df_pred, col='Sample Size', height=3.5, aspect=1.2)
+g = sns.FacetGrid(df_pred, col='Sample Size', height=2.8, aspect=1.15)
 g.map(sns.pointplot, 'Density Rank', 'Prediction', scale=0.7, data=df_pred, join=False, ci=False, order=np.arange(1, len(rank_dist) + 1))
 g.set_xticklabels(np.arange(1, len(rank_dist) + 1))
-# ax = sns.pointplot(x='Rank Distance', y='Prediction', hue='Sample Size', dodge=True, scale=0.8, data=df_pred, join=False)
+
 for i in range(len(sample_size)):
     y_preds = df_pred[df_pred['Sample Size'] == sample_size[i]].groupby("Density Rank")['Prediction'].mean()
     se = df_pred[df_pred['Sample Size'] == sample_size[i]].groupby("Density Rank")['Prediction'].agg(

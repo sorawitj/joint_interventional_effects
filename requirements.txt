@@ -1,0 +1,12 @@
+torch==1.1.0
+matplotlib==2.2.2
+scipy==1.1.0
+seaborn==0.9.0
+pyro_ppl==0.3.4
+pandas==0.23.0
+numpy==1.16.2
+tqdm==4.32.2
+mpmath==1.1.0
+pyro==3.16
+python_igraph==0.7.1.post6
+scikit_learn==0.22.1
